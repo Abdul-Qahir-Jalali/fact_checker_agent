@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fact Checker Agent</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔍</text></svg>">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #ffd93d 0%,
+          #ffb84d 50%,
+          #ff6b9d 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 800px;
+        width: 100%;
+        padding: 40px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        color: #ff1744;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .header p {
+        color: #6a1b9a;
+        font-size: 1.1em;
+        font-weight: 500;
+      }
+
+      .input-section {
+        margin-bottom: 30px;
+      }
+
+      label {
+        display: block;
+        color: #d500f9;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 15px;
+        border: 3px solid #ffb300;
+        border-radius: 15px;
+        font-size: 16px;
+        resize: vertical;
+        min-height: 100px;
+        transition: all 0.3s ease;
+        background: #fff9e6;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: #ff6f00;
+        box-shadow: 0 0 0 4px rgba(255, 111, 0, 0.2);
+        transform: scale(1.01);
+      }
+
+      .button-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      button {
+        flex: 1;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      #checkBtn {
+        background: linear-gradient(135deg, #00e676 0%, #00c853 100%);
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 230, 118, 0.4);
+      }
+
+      #checkBtn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 230, 118, 0.6);
+      }
+
+      #checkBtn:active {
+        transform: translateY(-1px);
+      }
+
+      #clearBtn {
+        background: linear-gradient(135deg, #ff4081 0%, #f50057 100%);
+        color: white;
+        box-shadow: 0 5px 15px rgba(255, 64, 129, 0.4);
+      }
+
+      #clearBtn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 64, 129, 0.6);
+      }
+
+      #clearBtn:active {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      .result-section {
+        display: none;
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .result-section.show {
+        display: block;
+      }
+
+      .verdict-box {
+        padding: 25px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        border: 4px solid;
+        animation: scaleIn 0.5s ease-out;
+      }
+
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .verdict-verified {
+        background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+        border-color: #00e676;
+      }
+
+      .verdict-refuted {
+        background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+        border-color: #ff1744;
+      }
+
+      .verdict-unverified {
+        background: linear-gradient(135deg, #ffe082 0%, #ffd54f 100%);
+        border-color: #ffb300;
+      }
+
+      .verdict-title {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .verdict-verified .verdict-title {
+        color: #1b5e20;
+      }
+
+      .verdict-refuted .verdict-title {
+        color: #b71c1c;
+      }
+
+      .verdict-unverified .verdict-title {
+        color: #f57f17;
+      }
+
+      .reasoning {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        border-left: 6px solid #9c27b0;
+      }
+
+      .reasoning h3 {
+        color: #6a1b9a;
+        margin-bottom: 10px;
+        font-size: 1.3em;
+      }
+
+      .reasoning p {
+        color: #333;
+        line-height: 1.6;
+        font-size: 1.05em;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 30px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 6px solid #ffe082;
+        border-top: 6px solid #ff6f00;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        color: #6a1b9a;
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      .error {
+        background: linear-gradient(135deg, #ffccbc 0%, #ffab91 100%);
+        border: 3px solid #ff5722;
+        border-radius: 15px;
+        padding: 20px;
+        color: #bf360c;
+        font-weight: bold;
+        display: none;
+      }
+
+      .error.show {
+        display: block;
+        animation: shake 0.5s ease-out;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      .emoji {
+        font-size: 2em;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🔍 Fact Checker Agent</h1>
+        <p>Verify any statement with AI-powered search</p>
+      </div>
+
+      <div class="input-section">
+        <label for="statement">Enter a statement to verify:</label>
+        <textarea
+          id="statement"
+          placeholder="e.g., The current price of Bitcoin is $290"
+          autofocus
+        ></textarea>
+      </div>
+
+      <div class="button-container">
+        <button id="checkBtn">✓ Check Fact</button>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">🤖 Analyzing your statement...</div>
+      </div>
+
+      <div class="result-section" id="result">
+        <div class="verdict-box" id="verdictBox">
+          <div class="verdict-title" id="verdictTitle"></div>
+        </div>
+        <div class="reasoning">
+          <h3>📋 Reasoning:</h3>
+          <p id="reasoning"></p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const statement = document.getElementById("statement");
+      const checkBtn = document.getElementById("checkBtn");
+      const loading = document.getElementById("loading");
+      const result = document.getElementById("result");
+      const error = document.getElementById("error");
+      const verdictBox = document.getElementById("verdictBox");
+      const verdictTitle = document.getElementById("verdictTitle");
+      const reasoning = document.getElementById("reasoning");
+
+      checkBtn.addEventListener("click", checkFact);
+      
+      statement.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          checkFact();
+        }
+      });
+
+      async function checkFact() {
+        const text = statement.value.trim();
+
+        if (!text) {
+          showError("❌ Please enter a statement to verify!");
+          return;
+        }
+
+        // Hide previous results and errors
+        result.classList.remove("show");
+        error.classList.remove("show");
+        loading.classList.add("show");
+        checkBtn.disabled = true;
+
+        try {
+          const response = await fetch("http://localhost:8000/check", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ statement: text }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Server error");
+          }
+
+          const data = await response.json();
+          displayResult(data);
+        } catch (err) {
+          showError(
+            "⚠️ Error connecting to the fact checker. Make sure the server is running!"
+          );
+        } finally {
+          loading.classList.remove("show");
+          checkBtn.disabled = false;
+        }
+      }
+
+      function displayResult(data) {
+        const verdict = data.verdict.toUpperCase();
+
+        // Clear previous classes
+        verdictBox.className = "verdict-box";
+
+        // Set verdict-specific styling
+        if (verdict === "VERIFIED") {
+          verdictBox.classList.add("verdict-verified");
+          verdictTitle.textContent = "✅ VERIFIED";
+        } else if (verdict === "REFUTED") {
+          verdictBox.classList.add("verdict-refuted");
+          verdictTitle.textContent = "❌ REFUTED";
+        } else {
+          verdictBox.classList.add("verdict-unverified");
+          verdictTitle.textContent = "❓ UNVERIFIED";
+        }
+
+        reasoning.textContent = data.reasoning;
+        result.classList.add("show");
+      }
+
+      function showError(message) {
+        error.textContent = message;
+        error.classList.add("show");
+        setTimeout(() => {
+          error.classList.remove("show");
+        }, 5000);
+      }
+
+      function clearAll() {
+        statement.value = "";
+        result.classList.remove("show");
+        error.classList.remove("show");
+        statement.focus();
+      }
+    </script>
+  </body>
+</html>

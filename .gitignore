@@ -1,0 +1,17 @@
+# Security
+.env
+
+# Environments
+fact_check/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
