@@ -1,0 +1,6 @@
+fastmcp
+tavily-python
+fastapi
+uvicorn[standard]
+pydantic
+httpx
