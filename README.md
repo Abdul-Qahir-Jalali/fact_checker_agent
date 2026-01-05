@@ -4,8 +4,6 @@
 
 A powerful, AI-driven fact-checking system that uses a hybrid **Local Client + Cloud Server** architecture to verify statements with real-time web search.
 
-![UI Screenshot](https://raw.githubusercontent.com/user/fact_checker_agent/main/ui-preview.png)
-*(Note: You can add a screenshot of your UI here later)*
 
 ## 🚀 Features
 
